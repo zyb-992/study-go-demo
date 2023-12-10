@@ -1,1 +1,1 @@
-package strings
+package main
