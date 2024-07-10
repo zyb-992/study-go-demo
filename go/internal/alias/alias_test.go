@@ -7,7 +7,9 @@ import (
 
 func Test_alias(t *testing.T) {
 
+	// 类型定义
 	type stringTyp string
+	// 类型别名
 	type stringEqualTyp = string
 
 	var (
