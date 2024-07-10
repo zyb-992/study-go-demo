@@ -11,6 +11,7 @@ const pathSuffix = ".log"
 
 func main() {
 	common()
+	readAndWrite()
 }
 
 func getDate() string {
@@ -18,8 +19,6 @@ func getDate() string {
 }
 
 func readAndWrite() {
-
-	common()
 	path := fmt.Sprintf("%s%s%s", pathPrefix, getDate(), pathSuffix)
 	f, err := createFile(path)
 	if err != nil {
@@ -40,6 +39,7 @@ func readAndWrite() {
 	//}
 
 	// after write
+	f.Seek(0, 0)
 	data, err := readFrom(f)
 	if err != nil {
 		log.Fatalf("read err:%v", err)
