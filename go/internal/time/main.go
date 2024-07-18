@@ -13,7 +13,7 @@ func main() {
 
 	now := time.Now()
 	fmt.Println("now is: ", now.String())
-	asiaLocation, _ := time.LoadLocation("Asia/ShangHai")
+	asiaLocation, _ := time.LoadLocation("Asia/Shanghai")
 	asiaTime := now.In(asiaLocation)
 	fmt.Println("asia time: ", asiaTime.String(), ", location: ", asiaTime.Location(), ", timestamp: ", asiaTime.Unix())
 
@@ -58,5 +58,21 @@ func formatDuration(d time.Duration) {
 	if d < time.Second {
 		fmt.Println(d)
 	}
+}
 
+func GetStartTimeOfDayWithInterval(interval int64, location *time.Location) (t1, t2 time.Time) {
+	if location == nil || interval < 0 {
+		return
+	}
+
+	now := time.Now().In(location)
+	yearOfNow, monthOfNow, dayOfNow := now.Date()
+
+	before := now.Add(-1 * time.Second * time.Duration(interval))
+	yearOfBefore, monthOfBefore, dayOfBefore := before.Date()
+
+	t1 = time.Date(yearOfBefore, monthOfBefore, dayOfBefore, 0, 0, 0, 0, location)
+	t2 = time.Date(yearOfNow, monthOfNow, dayOfNow-1, 23, 59, 59, 1e9-1, location)
+
+	return
 }
