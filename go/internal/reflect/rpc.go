@@ -44,5 +44,4 @@ func registerMethod(name string, o interface{}) {
 			args:   args,
 		}
 	}
-
 }

@@ -21,6 +21,45 @@ func Test_reflectPointer(t *testing.T) {
 	t.Logf("inner typ:%v, inner kind:%v, canaddr:%v", innerVal.Type(), innerVal.Kind(), innerVal.CanAddr())
 }
 
+func Test_reflectInterface(t *testing.T) {
+	s := []interface{}{
+		[]int64{1, 2, 3},
+		"suck",
+		18,
+	}
+	for _, v := range s {
+		val := reflect.ValueOf(v)
+		typ := val.Type()
+		t.Logf("[slice] type:%v, kind:%v", typ.String(), typ.Kind())
+	}
+
+	t.Log("\n")
+
+	m := map[string]interface{}{
+		"name": "suck",
+		"age":  18,
+		"list": []int64{1, 2, 3},
+	}
+	for _, v := range m {
+		val := reflect.ValueOf(v)
+		typ := val.Type()
+		t.Logf("[map] type:%v, kind:%v", typ.String(), typ.Kind())
+	}
+
+	t.Log("\n")
+
+	// 使用reflect.Value.MapRange() value元素需要使用Elem()获取
+	iterVal := reflect.ValueOf(m).MapRange()
+	for iterVal.Next() {
+		_, val := iterVal.Key(), iterVal.Value()
+		elem := val.Elem()
+		t.Logf("[map iterator] type:%v, kind:%v ", val.Type().String(), val.Kind())
+		t.Logf("[map iterator] elem's type:%v, elem's val:%v", elem.Type().String(), elem.Kind())
+		t.Log("\n")
+	}
+
+}
+
 /*
 CanAddr是CanSet的必要不充分条件
 */
@@ -150,12 +189,8 @@ const (
 func req2Map(i interface{}, m map[string]interface{}) map[string]interface{} {
 
 	filter := make(map[string]interface{})
-	v := reflect.ValueOf(i)
+	v := reflect.Indirect(reflect.ValueOf(i))
 	typ := v.Type()
-	if typ.Kind() == reflect.Pointer {
-		v = v.Elem()
-		typ = v.Type()
-	}
 
 	if typ.Kind() != reflect.Struct && typ.Kind() != reflect.Map {
 		fmt.Printf("req reflect type %v, kind %v not matched", typ.String(), typ.Kind())
@@ -167,13 +202,13 @@ func req2Map(i interface{}, m map[string]interface{}) map[string]interface{} {
 		for i := 0; i < typ.NumField(); i++ {
 			fieldVal := v.Field(i)
 			field := typ.Field(i)
-			if solve := field.Tag.Get(parseTag); solve == no {
+			if solve := field.Tag.Get(parseTag); solve == no || fieldVal.IsZero() {
 				continue
 			}
 
 			var innerFilter map[string]interface{}
-			if j := field.Tag.Get(columnTag); len(j) > 0 {
-				key := fmt.Sprintf(equal, j)
+			if column := field.Tag.Get(columnTag); len(column) > 0 {
+				key := fmt.Sprintf(equal, column)
 				switch {
 				case fieldVal.CanInt():
 					filter[key] = fieldVal.Int()
@@ -192,7 +227,7 @@ func req2Map(i interface{}, m map[string]interface{}) map[string]interface{} {
 								slice = append(slice, fieldVal.Index(i).Interface())
 							}
 						}
-						filter[fmt.Sprintf(in, j)] = slice
+						filter[fmt.Sprintf(in, column)] = slice
 					case reflect.Struct:
 						innerFilter = req2Map(fieldVal.Interface(), nil)
 					case reflect.Map:
