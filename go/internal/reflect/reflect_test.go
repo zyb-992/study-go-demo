@@ -277,3 +277,36 @@ func req2Map(i interface{}, m map[string]interface{}) map[string]interface{} {
 	}
 	return filter
 }
+
+func Test_newVal(t *testing.T) {
+	//reflect.New()
+}
+
+func Test_convert(t *testing.T) {
+
+	var (
+		Int   int64   = 1
+		Float float64 = 1
+	)
+
+	var (
+		intVal, floatVal = reflect.ValueOf(Int), reflect.ValueOf(Float)
+		intTyp, floatTyp = intVal.Type(), floatVal.Type()
+	)
+
+	if intTyp.AssignableTo(floatTyp) {
+		t.Log("int AssignableTo float result true")
+	}
+
+	if intTyp.ConvertibleTo(floatTyp) {
+		t.Log("int ConvertibleTo float result true")
+	}
+}
+
+func Test_val2ptrVal(t *testing.T) {
+	var i = 1
+	iVal := reflect.ValueOf(i)
+	iPtrVal := reflect.ValueOf(&i)
+	iVal.Interface()
+	t.Logf("iVal.CanAddr:%v iPtrVal.CanAddr:%v", iVal.CanAddr(), reflect.Indirect(iPtrVal).CanAddr())
+}
