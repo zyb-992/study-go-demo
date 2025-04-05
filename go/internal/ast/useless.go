@@ -135,3 +135,32 @@ func originalPath(path string) string {
 	mod = filepath.Join(gopath, "pkg", "mod", path)
 	return mod
 }
+
+func imports(file *ast.File) []*ast.ImportSpec {
+	importspec := make([]*ast.ImportSpec, 0)
+	for _, _decl := range file.Decls {
+		if decl, ok := _decl.(*ast.GenDecl); ok && decl.Tok == token.IMPORT {
+			for _, _spec := range decl.Specs {
+				if spec, ok := _spec.(*ast.ImportSpec); ok {
+					importspec = append(importspec, spec)
+				}
+			}
+		}
+	}
+
+	return importspec
+}
+
+func importMapping(specs []*ast.ImportSpec) map[string]string {
+	alias2Path := make(map[string]string)
+	// ImportSpec.Name will be set when set alias for imported path, other it is nil.
+	for _, _spec := range specs {
+		if _spec.Name != nil {
+			alias2Path[_spec.Name.Name] = _spec.Path.Value
+		} else {
+			alias2Path[filepath.Base(_spec.Path.Value)] = _spec.Path.Value
+		}
+	}
+
+	return alias2Path
+}
