@@ -177,7 +177,11 @@ func fval(field types.Type) interface{} {
 }
 
 func fields(p types.Type) ([]*types.Var, []string) {
-	obj := p.Underlying().(*types.Struct)
+	// compatible other type
+	obj, ok := p.Underlying().(*types.Struct)
+	if !ok {
+		log.Fatal("the specified type is not Go struct type.")
+	}
 
 	fields := make([]*types.Var, 0)
 	tags := make([]string, 0)
