@@ -59,6 +59,7 @@ func basic(path, typename string) *BasicParseInfo {
 func iterator(fields []*types.Var, tags []string) interface{} {
 	m := make(map[string]interface{})
 	for index, _field := range fields {
+		// todo progress interface type
 		if !_field.Embedded() {
 			tag := reflect.StructTag(tags[index]).Get("json")
 			if tag == "" {
@@ -74,15 +75,15 @@ func iterator(fields []*types.Var, tags []string) interface{} {
 				m[tag] = val
 			}
 		} else {
+			// for embedded field, this field type must be struct type as only struct type can be embedded
+			// so add all embedded field fields to the original field key-value mapping.
 			_embeddedMapping := fval(_field.Type())
 			if embeddedMapping, ok := _embeddedMapping.(map[string]interface{}); ok {
 				for k, v := range embeddedMapping {
 					m[k] = v
 				}
 			}
-
 		}
-
 	}
 
 	return m
@@ -93,13 +94,13 @@ func fval(field types.Type) interface{} {
 	case *types.Named:
 		switch ut := t.Underlying().(type) {
 		case *types.Interface:
-			// interface 无法确定具体类型，返回nil
+			// return nil because in this program executing period, it could't know the concrete type of interface
 			return nil
 		case *types.Struct:
 			m := make(map[string]interface{})
 			for i := 0; i < ut.NumFields(); i++ {
 				ufield := ut.Field(i)
-				// 非导出字段
+				// it should be pass when this field is unexported
 				if !ufield.Exported() {
 					continue
 				}
@@ -135,7 +136,6 @@ func fval(field types.Type) interface{} {
 			for i := 0; i < rand.Intn(6); i++ {
 				key := fval(underKey)
 				elem := fval(underElem)
-				// elem可能为非导出类型 或者无json标签
 				if elem == nil {
 					break
 				}
@@ -169,7 +169,7 @@ func fval(field types.Type) interface{} {
 	case *types.Basic:
 		return randomval(t.String())
 	case *types.Interface:
-		// interface 无法确定具体类型，返回nil
+		// return nil because in this program executing period, it could't know the concrete type of interface
 		return nil
 	}
 
@@ -185,8 +185,8 @@ func fields(p types.Type) ([]*types.Var, []string) {
 		tag := obj.Tag(i)
 		field := obj.Field(i)
 
-		// 当tag为空但该字段是embedded时
-		// 该字段对应的结构体字段列表被认作源结构体的字段列表, 不需要被continue
+		// when this field's tag is empty but it's embedded,
+		// it's all field should be treat as the original struct fields, not need to continue
 		/*if field.Embedded() && tag == "" {
 			continue
 		}*/
