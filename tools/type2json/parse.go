@@ -10,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 )
@@ -37,6 +38,14 @@ type BasicParseInfo struct {
 }
 
 func basic(path, typename string) *BasicParseInfo {
+	if len(path) == 0 {
+		return nil
+	}
+
+	if !filepath.IsAbs(path) {
+		path, _ = filepath.Abs(path)
+	}
+
 	pkgs := loadPackage([]string{path})
 	if len(pkgs) == 0 {
 		return nil

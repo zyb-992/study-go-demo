@@ -25,6 +25,9 @@ func main() {
 	}
 
 	parse := basic(*cmd.DirFlag, *cmd.TypeNameFlag)
+	if parse == nil {
+		log.Printf("can't find the type, dir:%v, type name:%v", *cmd.DirFlag, *cmd.TypeNameFlag)
+	}
 
 	var object = parse.object
 	if object == nil {
